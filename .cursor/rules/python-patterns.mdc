@@ -1,0 +1,131 @@
+---
+globs: *.py
+description: Python coding patterns and style for PTIE Dummy project
+---
+
+# Python Patterns for PTIE Dummy
+
+## Code Style Guidelines
+
+### Type Hints
+- Always use comprehensive type hints as shown in [networks.py](mdc:ptie_dummy/networks.py)
+- Use `Optional[T]` for nullable types
+- Use `Union[T, U]` or `T | U` for union types
+- Import typing utilities: `from typing import Dict, List, Tuple, Optional`
+
+### Enums
+- Use `Enum` and `auto()` for game constants as in [game.py](mdc:game/game.py):
+```python
+class GamePhase(Enum):
+    PICK_OR_DRAW = auto()
+    DISCARD_MELD_LAYOFF = auto()
+```
+
+### Configuration Classes
+- Use dataclass-style configuration classes like [TrainingConfig](mdc:ptie_dummy/training_pipeline.py)
+- Group related parameters logically
+- Provide sensible defaults
+- Include comments explaining parameter impacts
+
+### Error Handling
+- Use descriptive exception messages
+- Validate inputs at function boundaries
+- Handle PyTorch CUDA availability gracefully:
+```python
+self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+```
+
+## Neural Network Patterns
+
+### Model Architecture
+- Inherit from `nn.Module` for all network components
+- Use descriptive names for layers and modules
+- Include docstrings with input/output tensor shapes
+- Example from [AttentionModule](mdc:ptie_dummy/networks.py):
+```python
+def forward(self, state_repr: torch.Tensor, action_features: torch.Tensor) -> torch.Tensor:
+    """
+    Args:
+        state_repr: Game state representation [batch_size, state_dim]
+        action_features: Legal action features [batch_size, num_actions, action_dim]
+    Returns:
+        Action probabilities [batch_size, num_actions]
+    """
+```
+
+### Device Management
+- Always move tensors to appropriate device
+- Handle device transfers in model classes
+- Use `model.to(device)` pattern consistently
+
+### Training Utilities
+- Separate training logic into dedicated trainer classes
+- Use configuration objects for hyperparameters
+- Implement proper logging with timestamps
+- Save/load model checkpoints with full state
+
+## Game Logic Patterns
+
+### Game State Management
+- Use immutable state snapshots where possible
+- Implement deep copy for game state preservation
+- Track turn history for debugging
+- Example from [DummyGame](mdc:game/game.py):
+```python
+def save_initial_state(self):
+    # Save initial state for analysis
+```
+
+### Action Validation
+- Always validate actions before execution
+- Return comprehensive action lists for AI agents
+- Use action type enums for type safety
+- Implement action serialization for logging
+
+### Card Game Conventions
+- Use consistent card representation (rank, suit)
+- Implement card comparison and sorting
+- Handle special cards (Speto) through dedicated logic
+- Maintain card count invariants
+
+## Testing Patterns
+
+### Unit Tests
+- Test individual components in isolation
+- Mock external dependencies (GPU, file I/O)
+- Use pytest fixtures for common setup
+- Test edge cases and invalid inputs
+
+### Integration Tests
+- Test complete game workflows
+- Verify neural network input/output shapes
+- Test training pipeline end-to-end
+- Use small scale tests for CI/CD
+
+## Performance Patterns
+
+### Memory Management
+- Use torch.no_grad() for inference
+- Clear gradients appropriately
+- Implement batch processing for efficiency
+- Monitor memory usage during training
+
+### Parallel Processing
+- Use multiple environments for training data collection
+- Implement proper device synchronization
+- Handle worker process cleanup
+- Use appropriate batch sizes for hardware
+
+## Debugging and Logging
+
+### Comprehensive Logging
+- Log training metrics with TensorBoard
+- Include timestamp and step information
+- Log model architecture and hyperparameters
+- Implement different log levels (debug, info, warning)
+
+### Game State Debugging
+- Save game replays for analysis
+- Log action probabilities and values
+- Track reward signals and advantages
+- Implement visualization utilities

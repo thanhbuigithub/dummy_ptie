@@ -1,0 +1,167 @@
+---
+description: PTIE framework and machine learning patterns specific to this project
+---
+
+# PTIE Framework ML Patterns
+
+## Perfect-Training-Imperfect-Execution Architecture
+
+### Core PTIE Principle
+The fundamental pattern is **dual information pathways**:
+- **Training**: Value network uses perfect information (all players' cards visible)
+- **Execution**: Policy network uses imperfect information (player's cards + public info only)
+
+This is implemented in [PTIEActorCritic](mdc:ptie_dummy/networks.py) with separate feature encoders.
+
+### Feature Engineering Patterns
+
+#### Information Types
+Use [FeatureType enum](mdc:ptie_dummy/feature_encoder.py) to distinguish:
+```python
+class FeatureType(Enum):
+    IMPERFECT = "imperfect"  # Player's hand + public info
+    PERFECT = "perfect"      # All players' hands + oracle info
+```
+
+#### Card Representation Matrix
+- **Imperfect features**: 15×13×4 matrix (history layers × ranks × suits)
+  - Layer 0: Current player's hand
+  - Layer 1: Public melded forms  
+  - Layer 2: Discard pile
+  - Layers 3-14: Action history and card tracking
+- **Perfect features**: 17×13×4 matrix (adds all opponents' hands + oracle)
+
+### Neural Network Architecture Patterns
+
+#### Actor (Policy) Network
+```python
+# Uses ONLY imperfect information
+card_features -> LSTM -> attention(legal_actions) -> action_probabilities
+```
+- Input: Imperfect game state + legal action features
+- Output: Probability distribution over legal actions
+- Never sees opponents' hidden cards
+
+#### Critic (Value) Network  
+```python
+# Combines imperfect + perfect information
+imperfect_encoder -> |
+perfect_encoder   -> | -> concatenate -> MLP -> state_value
+game_state_encoder-> |
+```
+- Input: Both imperfect AND perfect game state
+- Output: State value estimation
+- Uses oracle information (minimum steps to win)
+
+### Training Algorithm Patterns
+
+#### PPO with GAE
+Implement in [PPOTrainer](mdc:ptie_dummy/ppo_trainer.py):
+- **Proximal Policy Optimization** for stable policy updates
+- **Generalized Advantage Estimation** for variance reduction
+- **Self-play training** for continuous improvement
+
+#### Oracle Reward Engineering
+[RewardCalculator](mdc:ptie_dummy/reward_calculator.py) provides:
+- **Dense reward signals** based on minimum steps to win
+- **Advantage-based rewards**: `best_opponent_steps - current_player_steps`
+- **Bonus rewards** for game-ending moves and special achievements
+
+### Action Space and Attention Patterns
+
+#### Legal Action Filtering
+- Always compute legal actions first: `game.get_all_possible_action_for_player()`
+- Use attention mechanism to score only legal actions
+- Mask illegal actions with `-inf` before softmax
+
+#### Action Feature Encoding
+Encode each action as a feature vector including:
+- Action type (draw, pick, meld, layoff, discard, knock)
+- Target cards and positions
+- Expected immediate reward
+- Game state context
+
+### Training Pipeline Patterns
+
+#### Multi-Environment Training
+```python
+# Parallel game environments for data collection
+num_envs = 16  # Multiple simultaneous games
+# Collect diverse experiences efficiently
+```
+
+#### Evaluation Integration
+- Regular evaluation against fixed opponents (random, greedy)
+- Track win rates and performance metrics
+- Save best models based on evaluation scores
+- Early stopping based on performance plateaus
+
+### Model Management Patterns
+
+#### Checkpoint Strategy
+Save models with comprehensive state:
+- Model weights (actor + critic)
+- Optimizer states
+- Training metadata (step, episode, performance)
+- Configuration parameters
+
+#### Device Handling
+```python
+# Automatic device detection and management
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model.to(device)
+# Always move data to model device before forward pass
+```
+
+### Debugging and Analysis Patterns
+
+#### Game State Visualization
+- Save complete game histories for replay analysis
+- Log action probabilities and value estimates
+- Track oracle calculations vs actual outcomes
+- Visualize learning curves and performance metrics
+
+#### Ablation Study Support
+Structure code to easily disable PTIE components:
+- Switch between perfect/imperfect training modes
+- Compare oracle vs sparse rewards
+- Test different network architectures
+- Evaluate with/without attention mechanisms
+
+### Performance Optimization Patterns
+
+#### Batch Processing
+- Process multiple games simultaneously
+- Vectorize feature computation where possible
+- Use appropriate batch sizes for memory constraints
+- Implement efficient tensor operations
+
+#### Memory Management
+```python
+# Use torch.no_grad() for inference
+with torch.no_grad():
+    action_probs = policy_network(state_features)
+
+# Clear gradients and intermediate tensors
+optimizer.zero_grad()
+del intermediate_tensors  # Explicit cleanup when needed
+```
+
+### Research and Experimentation Patterns
+
+#### Hyperparameter Management
+- Use configuration classes for all hyperparameters
+- Support command-line overrides for experiments
+- Log all hyperparameters with results
+- Implement grid search and hyperparameter optimization
+
+#### Metric Tracking
+Essential metrics for PTIE training:
+- **Policy loss**: Actor network training progress
+- **Value loss**: Critic network accuracy  
+- **Entropy**: Policy exploration vs exploitation balance
+- **Win rate**: Performance against various opponents
+- **Game length**: Efficiency of learned strategies
+- **Oracle accuracy**: How well value network predicts minimum steps
+
+This framework enables systematic comparison with baselines and ablation studies to validate the PTIE approach.

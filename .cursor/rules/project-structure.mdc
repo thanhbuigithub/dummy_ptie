@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+description: PTIE Dummy project structure and architecture guide
+---
+
+# PTIE Dummy Project Structure Guide
+
+This project implements the **Perfect-Training-Imperfect-Execution (PTIE)** framework for the Dummy card game, based on research from PerfectDou (NeurIPS 2022).
+
+## Core Architecture
+
+### Main Entry Points
+- Training: [ptie_dummy/training_pipeline.py](mdc:ptie_dummy/training_pipeline.py) - Main training loop with self-play
+- Evaluation: [ptie_dummy/evaluation.py](mdc:ptie_dummy/evaluation.py) - Model evaluation against different opponents  
+- Demo: [ptie_dummy/demo.py](mdc:ptie_dummy/demo.py) - Interactive demonstrations
+- Example Usage: [example_usage.py](mdc:example_usage.py) - Complete usage examples
+
+### PTIE Framework Components
+- **Neural Networks**: [ptie_dummy/networks.py](mdc:ptie_dummy/networks.py) - Actor-Critic architectures with perfect/imperfect information pathways
+- **Feature Encoding**: [ptie_dummy/feature_encoder.py](mdc:ptie_dummy/feature_encoder.py) - Converts game state to neural network inputs
+- **PPO Training**: [ptie_dummy/ppo_trainer.py](mdc:ptie_dummy/ppo_trainer.py) - Proximal Policy Optimization implementation
+- **Oracle Rewards**: [ptie_dummy/reward_calculator.py](mdc:ptie_dummy/reward_calculator.py) - Minimum steps calculation for dense rewards
+
+### Game Engine
+- **Core Game Logic**: [game/game.py](mdc:game/game.py) - Main DummyGame class with turn management and game state
+- **Player Management**: [game/player.py](mdc:game/player.py) - Player class with hand management
+- **Card System**: [game/card.py](mdc:game/card.py) - Card and CardList classes with Dummy-specific logic
+- **Actions**: [game/action.py](mdc:game/action.py) - All possible game actions (draw, pick, meld, layoff, discard, knock)
+- **Meld Logic**: [game/form.py](mdc:form.py) - Meld formation and validation
+- **Scoring**: [game/extra_point.py](mdc:game/extra_point.py) - Dummy scoring system with Speto cards
+
+## Key PTIE Concepts
+
+### Perfect vs Imperfect Information
+- **Training Phase**: Value network sees all players' cards for accurate state evaluation
+- **Execution Phase**: Policy network only sees player's own cards + public information
+- Feature encoder handles both feature types through [FeatureType enum](mdc:ptie_dummy/feature_encoder.py)
+
+### Neural Network Design
+- **Policy Network**: LSTM + Attention for action selection using imperfect information
+- **Value Network**: Combines imperfect + perfect information pathways
+- Both networks defined in [PTIEActorCritic class](mdc:ptie_dummy/networks.py)
+
+### Oracle-Based Training
+- Dense reward signal based on minimum steps to win calculation
+- Guides agents toward optimal play strategies
+- Implementation in [reward_calculator.py](mdc:ptie_dummy/reward_calculator.py)
+
+## Development Workflow
+
+### Configuration Management
+- [TrainingConfig](mdc:ptie_dummy/training_pipeline.py) for training parameters
+- [EvaluationConfig](mdc:ptie_dummy/evaluation.py) for evaluation settings
+- [PPOConfig](mdc:ptie_dummy/ppo_trainer.py) for algorithm hyperparameters
+
+### Model Lifecycle
+1. Training: `PTIETrainingPipeline.train()` 
+2. Evaluation: `PTIEEvaluator.evaluate_comprehensive()`
+3. Deployment: `DummyGameDemo` for interactive play
+
+### Data Flow
+```
+Game State → Feature Encoder → Neural Networks → Actions → Game Engine → Rewards → Training
+```

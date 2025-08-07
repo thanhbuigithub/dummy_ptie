@@ -1,0 +1,246 @@
+---
+description: PowerShell development environment and command patterns for Windows
+---
+
+# PowerShell Development Environment
+
+## Environment Setup Patterns
+
+### Virtual Environment Management
+Always use virtual environments for Python development:
+```powershell
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment (Windows PowerShell)
+.\venv\Scripts\Activate.ps1
+
+# Deactivate when done
+deactivate
+```
+
+### Dependency Management
+```powershell
+# Install dependencies
+pip install -r requirements.txt
+
+# Install in development mode
+pip install -e .
+
+# Update requirements
+pip freeze > requirements.txt
+```
+
+### CUDA and GPU Setup
+Check GPU availability before training:
+```powershell
+# Test GPU access
+python test_gpu.py
+
+# Monitor GPU usage during training
+nvidia-smi
+```
+
+## Training and Execution Commands
+
+### Training Pipeline
+```powershell
+# Basic training
+python -m ptie_dummy.training_pipeline --timesteps 1000000 --num_envs 16 --device cuda
+
+# Quick training for testing
+python -m ptie_dummy.training_pipeline --timesteps 50000 --num_envs 4 --device cpu
+
+# Custom configuration
+python -m ptie_dummy.training_pipeline --model_dir models/experiment1 --log_dir logs/experiment1
+```
+
+### Evaluation
+```powershell
+# Evaluate trained model
+python -m ptie_dummy.evaluation --model models/best_model.pt --episodes 1000 --opponents random greedy
+
+# Quick evaluation
+python -m ptie_dummy.evaluation --model models/best_model.pt --episodes 100
+```
+
+### Interactive Demo
+```powershell
+# Human vs AI
+python -m ptie_dummy.demo --model models/best_model.pt --mode interactive
+
+# AI vs AI demonstration  
+python -m ptie_dummy.demo --model models/best_model.pt --mode ai_vs_ai --games 10
+```
+
+### Example Usage
+```powershell
+# Run complete example workflow
+python example_usage.py --mode all
+
+# Run specific examples
+python example_usage.py --mode train
+python example_usage.py --mode eval --model models/best_model.pt
+python example_usage.py --mode demo --model models/best_model.pt
+```
+
+## Development Workflow Commands
+
+### Code Quality
+```powershell
+# Format code
+black ptie_dummy/ game/
+
+# Lint code
+flake8 ptie_dummy/ game/
+
+# Type checking
+mypy ptie_dummy/ game/
+```
+
+### Testing
+```powershell
+# Run all tests
+pytest tests/
+
+# Run specific test files
+pytest tests/test_game.py
+pytest tests/test_networks.py
+
+# Run with coverage
+pytest --cov=ptie_dummy --cov=game tests/
+```
+
+### Git Operations
+```powershell
+# Check status and stage changes
+git status
+git add .
+git commit -m "Add new feature"
+
+# Push changes
+git push origin main
+
+# Create feature branch
+git checkout -b feature/new-training-algorithm
+```
+
+## Directory and File Management
+
+### Project Structure Commands
+```powershell
+# Create necessary directories
+mkdir -p models logs eval_results
+
+# List project structure
+tree /F
+
+# Find files by pattern
+Get-ChildItem -Path . -Recurse -Include "*.py" | Select-Object Name, DirectoryName
+```
+
+### File Operations
+```powershell
+# Copy models between directories
+Copy-Item "models/best_model.pt" "backup/best_model_$(Get-Date -Format 'yyyyMMdd').pt"
+
+# Clean up temporary files
+Remove-Item -Path "logs/*.tmp" -Force
+Remove-Item -Path "__pycache__" -Recurse -Force
+```
+
+## Debugging and Monitoring Commands
+
+### Log Analysis
+```powershell
+# View recent training logs
+Get-Content "logs/training_$(Get-Date -Format 'yyyyMMdd')*.log" -Tail 50
+
+# Filter logs for errors
+Select-String -Path "logs/*.log" -Pattern "ERROR|CRITICAL"
+
+# Monitor log files in real-time
+Get-Content "logs/training.log" -Wait -Tail 10
+```
+
+### Performance Monitoring
+```powershell
+# Monitor system resources
+Get-Process python | Format-Table -Property Name, CPU, WorkingSet
+
+# Check disk space
+Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, FreeSpace, Size
+
+# Monitor GPU if available
+nvidia-smi -l 5  # Update every 5 seconds
+```
+
+### Environment Debugging
+```powershell
+# Check Python environment
+python --version
+pip list | findstr torch
+pip list | findstr numpy
+
+# Check CUDA availability
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+
+# Check installed packages
+pip show torch
+pip check  # Check for dependency conflicts
+```
+
+## Automation and Scripting
+
+### Batch Operations
+```powershell
+# Run multiple training experiments
+$experiments = @("experiment1", "experiment2", "experiment3")
+foreach ($exp in $experiments) {
+    python -m ptie_dummy.training_pipeline --model_dir "models/$exp" --log_dir "logs/$exp"
+}
+
+# Batch evaluation against multiple models
+Get-ChildItem "models/*.pt" | ForEach-Object {
+    python -m ptie_dummy.evaluation --model $_.FullName --episodes 100
+}
+```
+
+### Cleanup Scripts
+```powershell
+# Clean up training artifacts
+Remove-Item -Path "logs/*.tmp" -Force
+Remove-Item -Path "models/*.backup" -Force
+Remove-Item -Path "__pycache__" -Recurse -Force
+Get-ChildItem -Path . -Name "*.pyc" -Recurse | Remove-Item -Force
+```
+
+## Error Handling and Troubleshooting
+
+### Common Issues
+```powershell
+# Fix permission issues with execution policy
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# Clear Python cache
+Get-ChildItem -Path . -Name "__pycache__" -Recurse | Remove-Item -Recurse -Force
+
+# Reinstall problematic packages
+pip uninstall torch torchvision torchaudio
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+### Debugging Commands
+```powershell
+# Run with debug output
+python -u -m ptie_dummy.training_pipeline --device cpu 2>&1 | Tee-Object debug.log
+
+# Check module imports
+python -c "import ptie_dummy; print('Import successful')"
+python -c "import game; print('Game module imported')"
+
+# Validate model files
+python -c "import torch; torch.load('models/best_model.pt', map_location='cpu'); print('Model valid')"
+```
+
+This rule ensures PowerShell commands are executable and follow Windows development best practices.

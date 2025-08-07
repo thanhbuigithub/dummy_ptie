@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+debug_*.py
+test_*/
+example_logs/
+example_eval_results/
+eval_results/
+logs/
