@@ -2,11 +2,11 @@ import numpy as np
 import random
 import copy
 from enum import Enum, auto
-from card import Card, CardList, Suit, Rank
-from player import Player, PlayerIndex
-from form import Form, CARDS_MAP, Layoff
-from extra_point import ExtraPoint, ExtraPointType
-from action import Action, ActionType, InitAction, DrawAction, PickAction, DiscardAction, LayoffAction, MeldAction, KnockAction, ShowSpetoAction
+from .card import Card, CardList, Suit, Rank
+from .player import Player, PlayerIndex
+from .form import Form, CARDS_MAP, Layoff
+from .extra_point import ExtraPoint, ExtraPointType
+from .action import Action, ActionType, InitAction, DrawAction, PickAction, DiscardAction, LayoffAction, MeldAction, KnockAction, ShowSpetoAction
 
 
 class GamePhase(Enum):

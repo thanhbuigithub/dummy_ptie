@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
-from card import Card, CardList
-from form import Form, Layoff
+from .card import Card, CardList
+from .form import Form, Layoff
 
 class ActionType(Enum):
     """Represents the types of actions that can be taken in the game."""

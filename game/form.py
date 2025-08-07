@@ -1,4 +1,4 @@
-from card import Suit, Rank, Card, CardList
+from .card import Suit, Rank, Card, CardList
 import itertools
 
 

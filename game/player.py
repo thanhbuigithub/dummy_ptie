@@ -1,6 +1,6 @@
-from card import Suit, Rank, Card, CardList
-from form import CARDS_MAP, Form, Layoff
-from extra_point import ExtraPointType, ExtraPoint, ExtraPointValueType
+from .card import Suit, Rank, Card, CardList
+from .form import CARDS_MAP, Form, Layoff
+from .extra_point import ExtraPointType, ExtraPoint, ExtraPointValueType
 from enum import Enum
 
 class PlayerIndex(Enum):
